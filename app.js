@@ -34,6 +34,7 @@ app.get("/webhook", function(req, res){
 		res.status(200).send(req.query["hub.challenge"]);
 	}
 	else{
+		//return one status if the tokens doesn't match
 		console.log("[-] Invalid token, the tokens doesn't match");
 		res.sendStatus(403);
 	}
