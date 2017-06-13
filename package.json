@@ -1,0 +1,31 @@
+{
+  "name": "captaincode-bot",
+  "version": "1.0.0",
+  "description": "Captaincode Bot Server",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/captaincode0/messenger-bot.git"
+  },
+  "keywords": [
+    "bot",
+    "messenger",
+    "facebook",
+    "nodejs"
+  ],
+  "author": "captaincode0",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/captaincode0/messenger-bot/issues"
+  },
+  "homepage": "https://github.com/captaincode0/messenger-bot#readme",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3",
+    "mongoose": "^4.10.6",
+    "request": "^2.81.0"
+  }
+}
