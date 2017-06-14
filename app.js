@@ -180,12 +180,22 @@ function getMovieDetail(userId, field){
  * @return {[type]}            [description]
  */
 function findMovie(userId, movieTitle){
-	request("http://www.theimdbapi.org/api/find/movie?title=" + movieTitle, 
-		function(err, res, body){
+	request({
+		url: "http://www.theimdbapi.org/api/find/movie?title=" + movieTitle, 
+		method: "GET",
+	}, function(err, res, body){
+			if(err)
+				sendMessage(userId, "Sorry i can't get the movie that you are looking for, try again");
+
 			//check if not exists errors
 			if(!err & res.statusCode === 200){
 				//parse the body content
 				var movie_object = JSON.parse(body);
+
+				if(!movie_object.rating){
+					sendMessage(userId, {text: "Sorry i can't look for your movie"});
+					return;
+				}
 
 				//define the update for the collection
 				var collection_update = {
