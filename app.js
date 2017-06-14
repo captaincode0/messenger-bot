@@ -96,6 +96,10 @@ function processPostBack(event){
 			sendMessage(sender_id, {text:message});
 		});
 	}
+	else if(data_payload === "Correct")
+		sendMessage(sender_id, {text: "Awesome!, do you want to find another?"});
+	else if(data_payload === "Incorrect")
+		sendMessage(sender_id, {text: "Oops! that's not what you want, try again, please search with the specific name"});
 }
 
 /**
@@ -142,7 +146,8 @@ function processMessage(event){
 			//the keywords correspond to movie details
 			//but when doesn't match look for other movie
 			switch(fmt_msg){
-				case "release_date":
+				case "date":
+					fmt_msg = "release_date";
 				case "year":
 				case "cast":
 				case "rating":
