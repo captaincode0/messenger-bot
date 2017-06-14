@@ -182,67 +182,63 @@ function getMovieDetail(userId, field){
 function findMovie(userId, movieTitle){
 	request({
 		url: "http://www.theimdbapi.org/api/find/movie?title=" + movieTitle, 
-		method: "GET",
+		method: "GET"
 	}, function(err, res, body){
 			if(err)
 				sendMessage(userId, "Sorry i can't get the movie that you are looking for, try again");
 
-			//check if not exists errors
-			if(!err & res.statusCode === 200){
-				//parse the body content
-				var movie_object = JSON.parse(body);
+			//parse the body content
+			var movie_object = JSON.parse(body);
 
-				movie_object = movie_object[0];
-
-				if(!movie_object.rating){
-					sendMessage(userId, {text: "Sorry i can't look for your movie"});
-					return;
-				}
-
-				//define the update for the collection
-				var collection_update = {
-					user_id: userId,
-					title: movieTitle,
-					date: movie_object.release_date,
-					year: movie_object.year,
-					cast: movie_object.cast,
-					rating: movie_object.rating,
-					poster_url: movie_object.poster.large
-				};
-
-				movie_model.findOneAndUpdate({user_id:userId}, {upsert: true}, collection_update, function(err, mov){
-						if(err)
-							console.log("[-] MongoDB Error: "+err);
-						else{
-							var message = {
-								attachment: {
-									type: "template",
-									payload: {
-										template_type: "generic",
-										elements: [{
-											title: movie_object.title,
-											subtitle: "Is this the movie that are you looking for?",
-											image_url: movie_object.poster.large,
-											buttons: [{
-												type: "postback",
-												title: "Yes",
-												payload: "Correct"
-											},{
-												type: "postback",
-												title: "No",
-												payload: "Incorrect"
-											}]
-										}]
-									}
-								}
-							};
-							sendMessage(userId, message);
-						}
-					}
-				);
+			if(!movie_object.rating){
+				sendMessage(userId, {text: "Sorry i can't look for your movie"});
+				return;
 			}
-			else
-				sendMessage(userId, {text: "Something went wrong, try again"});
+
+			//get the first result
+			movie_object = movie_object[0];
+
+			//define the update for the collection
+			var collection_update = {
+				user_id: userId,
+				title: movieTitle,
+				date: movie_object.release_date,
+				year: movie_object.year,
+				cast: movie_object.cast,
+				rating: movie_object.rating,
+				poster_url: movie_object.poster.large
+			};
+
+			movie_model.findOneAndUpdate({user_id:userId}, {upsert: true}, collection_update, function(err, mov){
+					if(err)
+						console.log("[-] MongoDB Error: "+err);
+					else{
+						var message = {
+							attachment: {
+								type: "template",
+								payload: {
+									template_type: "generic",
+									elements: [{
+										title: movie_object.title,
+										subtitle: "Is this the movie that are you looking for?",
+										image_url: movie_object.poster.large,
+										buttons: [{
+											type: "postback",
+											title: "Yes",
+											payload: "Correct"
+										},{
+											type: "postback",
+											title: "No",
+											payload: "Incorrect"
+										}]
+									}]
+								}
+							}
+						};
+						sendMessage(userId, message);
+					}
+				}
+			);
 		}
 	);
 }
