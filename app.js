@@ -77,11 +77,11 @@ function processPostBack(event){
 				console.log("[-] Error getting user name"+error);
 			else{
 				let json_res = JSON.parse(body);
-				name = json_res.first_name;
+				let name = json_res.first_name;
 				gretting = "Hi, "+name+", ";
 			}
 
-			let message = greeting+"my name is ZZ Moviez bot, i can tell you about recent movies, actors and directors";
+			let message = greeting+"my name is ZZ Moviez bot, i can tell you about recent movies, actors and directors, what do you want to know?";
 			sendMessage(sender_id, message);
 		});
 	}
