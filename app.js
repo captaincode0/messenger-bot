@@ -192,6 +192,8 @@ function findMovie(userId, movieTitle){
 				//parse the body content
 				var movie_object = JSON.parse(body);
 
+				movie_object = movie_object[0];
+
 				if(!movie_object.rating){
 					sendMessage(userId, {text: "Sorry i can't look for your movie"});
 					return;
