@@ -71,17 +71,17 @@ function processPostBack(event){
 			},
 			method: "GET"
 		}, function(error, res, body){
-			let greeting = "";
+			var greeting = "";
 
 			if(error)
 				console.log("[-] Error getting user name"+error);
 			else{
-				let json_res = JSON.parse(body);
-				let name = json_res.first_name;
+				var json_res = JSON.parse(body);
+				var name = json_res.first_name;
 				gretting = "Hi, "+name+", ";
 			}
 
-			let message = greeting+"my name is ZZ Moviez bot, i can tell you about recent movies, actors and directors, what do you want to know?";
+			var message = greeting+"my name is ZZ Moviez bot, i can tell you about recent movies, actors and directors, what do you want to know?";
 			sendMessage(sender_id, message);
 		});
 	}
