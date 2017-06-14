@@ -184,8 +184,10 @@ function findMovie(userId, movieTitle){
 		url: "http://www.theimdbapi.org/api/find/movie?title=" + movieTitle, 
 		method: "GET"
 	}, function(err, res, body){
-			if(err)
+			if(err){
 				sendMessage(userId, "Sorry i can't get the movie that you are looking for, try again");
+				return;
+			}
 
 			//parse the body content
 			var movie_object = JSON.parse(body);
