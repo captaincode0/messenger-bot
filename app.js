@@ -1,6 +1,10 @@
 var express = require("express");
 var request = require("request");
 var body_parser = require("body-parser");
+var mongoose = require("mongoose");
+
+var db = mongoose.connect(process.env.MONGODB_URI);
+var movie_model = require("./models/movie");
 
 /**
  * Research
@@ -50,6 +54,8 @@ app.post("/webhook", function(req, res){
 			entry.messaging.forEach(function(event){
 				if(event.postback)
 					processPostBack(event);
+				else if(event.message)
+					processMessage(event);
 			});
 		});
 	}
@@ -57,6 +63,11 @@ app.post("/webhook", function(req, res){
 	res.sendStatus(200);
 });
 
+/**
+ * [processPostBack description]
+ * @param  {[type]} event [description]
+ * @return {[type]}       [description]
+ */
 function processPostBack(event){
 	var sender_id = event.sender.id;
 	var data_payload = event.postback.payload;
@@ -81,12 +92,18 @@ function processPostBack(event){
 				gretting = "Hi, "+name+", ";
 			}
 
-			var message = greeting+"My name is ZZ Moviez bot, i can tell you about recent movies, actors and directors, what do you want to know?";
+			var message = greeting+"My name is ZZ Moviez bot, i can tell you about recent movies, what do you want to know?";
 			sendMessage(sender_id, {text:message});
 		});
 	}
 }
 
+/**
+ * [sendMessage description]
+ * @param  {[type]} recipient_id [description]
+ * @param  {[type]} message      [description]
+ * @return {[type]}              [description]
+ */
 function sendMessage(recipient_id, message){
 	request({
 		url: "https://graph.facebook.com/v2.6/me/messages",
@@ -100,4 +117,120 @@ function sendMessage(recipient_id, message){
 		if(error)
 			console.log("[-] Error sending the message: "+response.error);
 	});
+}
+
+/**
+ * [processMessage process the sended message by the user]
+ * @param  {[type]} event [description]
+ * @return {[type]}       [description]
+ */
+function processMessage(event){
+	//check if the message is not one echo
+	if(!event.message.is_echo){
+		var message = event.message;
+		var sender_id = event.sender.id;
+
+		console.log("[+] Received message from facebook sender id: "+sender_id);
+		console.log("[+] The message is: "+JSON.stringify(message));
+
+		//check if the message has content
+		if(message.text){
+			//format the message
+			var fmt_msg = message.text.toLowerCase().trim();
+
+			//if the message was received then check if match with special keywords
+			//the keywords correspond to movie details
+			//but when doesn't match look for other movie
+			switch(fmt_msg){
+				case "release_date":
+				case "year":
+				case "cast":
+				case "rating":
+					getMovieDetail(sender_id, fmt_msg);
+					break;
+				default:
+					findMovie(sender_id, fmt_msg);
+					break;
+			}
+		}
+		else if(message.attachments)
+			sendMessage(sender_id, {text: "Sorry, I can't receive files, i don't understand your request."});
+	}
+}
+
+/**
+ * [getMovieDetail description]
+ * @param  {[type]} userId [description]
+ * @param  {[type]} field  [description]
+ * @return {[type]}        [description]
+ */
+function getMovieDetail(userId, field){
+	movie_model.findOne({user_id: userId}, function(err, movie){
+		if(err)
+			sendMessage(userId, {text: "Sorry, i can't find your movie, try again :)"});
+		else
+			sendMessage(user_id, {text:movie[field]});
+	});
+}
+
+/**
+ * [findMovie description]
+ * @param  {[type]} userId     [description]
+ * @param  {[type]} movieTitle [description]
+ * @return {[type]}            [description]
+ */
+function findMovie(userId, movieTitle){
+	request("http://www.theimdbapi.org/api/find/movie?title=" + movieTitle, 
+		function(err, res, body){
+			//check if not exists errors
+			if(!err & res.statusCode === 200){
+				//parse the body content
+				var movie_object = JSON.parse(body);
+
+				//define the update for the collection
+				var collection_update = {
+					user_id: userId,
+					title: movieTitle,
+					date: movie_object.release_date,
+					year: movie_object.year,
+					cast: movie_object.cast,
+					rating: movie_object.rating,
+					poster_url: movie_object.poster.large
+				};
+
+				movie_model.findOneAndUpdate({user_id:userId}, {upsert: true}, collection_update, function(err, mov){
+						if(err)
+							console.log("[-] MongoDB Error: "+err);
+						else{
+							var message = {
+								attachment: {
+									type: "template",
+									payload: {
+										template_type: "generic",
+										elements: [{
+											title: movie_object.title,
+											subtitle: "Is this the movie that are you looking for?",
+											image_url: movie_object.poster.large,
+											buttons: [{
+												type: "postback",
+												title: "Yes",
+												payload: "Correct"
+											},{
+												type: "postback",
+												title: "No",
+												payload: "Incorrect"
+											}]
+										}]
+									}
+								}
+							};
+							sendMessage(userId, message);
+						}
+					}
+				);
+			}
+			else
+				sendMessage(userId, {text: "Something went wrong, try again"});
+		}
+	);
 }
