@@ -211,7 +211,7 @@ function findMovie(userId, movieTitle){
 				poster_url: movie_object.poster.large
 			};
 
-			movie_model.findOneAndUpdate({user_id:userId}, {upsert: true}, collection_update, function(err, mov){
+			movie_model.findOneAndUpdate({user_id:userId}, collection_update, {upsert: true}, function(err, mov){
 					if(err)
 						console.log("[-] MongoDB Error: "+err);
 					else{
